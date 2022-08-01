@@ -3,18 +3,17 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.decorators import task
+from airflow.operators.python_operator import PythonOperator
 import docker
 
 with DAG(
-    "API_CALL_WORKSPACE", 
-    schedule_interval='@daily',
-    start_date=datetime(2022, 1, 1), 
-    catchup=False
-   
+         "API_CALL_WORKSPACE", 
+         schedule_interval='@daily',
+         start_date=datetime(2022, 1, 1), 
+         catchup=False
+                 
 ) as dag:
-
-    @task(task_id='api_connect')
-    def find_api_key():
+    def find_api_key(**kwargs):
         expanded_conf_file_path = os.path.expanduser("~/.ngc/config")
         if os.path.exists(expanded_conf_file_path):
             print("Config file exists, pulling API key from it")
@@ -34,8 +33,13 @@ with DAG(
         else:
             print("Could not find a valid API key")
             return ''
+        
+    t1 = PythonOperator(
+            task_id = 'api_connect',
+            python_callable= find_api_key(),
+            dag = dag
+        )
 
-    @task(task_id='token')
     def get_token(org, team):
         '''Use the api key set environment variable to generate auth token'''
         scope = f'group/ngc:{org}'
@@ -54,8 +58,13 @@ with DAG(
         if response.status_code != 200:
              raise Exception("HTTP Error %d: from %s" % (response.status_code, url))
         return json.loads(response.text.encode('utf8'))["token"]
-
-    @task(task_id='workspace')
+       
+    t2 = PythonOperator(
+            task_id = 'token',
+            python_callable= get_token(org='iffx7vlsrd5t', team='nvbc-tme'),
+            dag = dag
+        )
+    
     def create_workspace(org, team, ace, name, token):
         '''Create a workspace in a given org for the authenticated user'''
         url = f'https://api.ngc.nvidia.com/v2/org/{org}/workspaces/'
@@ -71,15 +80,16 @@ with DAG(
         if response.status_code != 200:
             raise Exception("HTTP Error %d: from '%s'" % (response.status_code, url))
         return response.json()
-
-
-    workspace = create_workspace(org='iffx7vlsrd5t', team='nvbc-tme', ace='nv-launchpad-bc-iad-ace', name='Sydney Kropp', token=get_token(org='iffx7vlsrd5t', team='nvbc-tme'))
-    api_connect = find_api_key()
-    token = get_token(org='iffx7vlsrd5t', team='nvbc-tme')
+        
+    t3 = PythonOperator(
+            task_id = 'workspace',
+            python_callable= create_workspace(org='iffx7vlsrd5t', team='nvbc-tme', ace='nv-launchpad-bc-iad-ace', name='Sydney Kropp', token=get_token(org='iffx7vlsrd5t', team='nvbc-tme')),
+            dag = dag
+        )
     
     # Dummy functions
     start= EmptyOperator(task_id='start')
     end= EmptyOperator(task_id='end')
 
     # Create a simple workflow
-start >> api_connect >> token >> workspace >> end
+start >> t1 >> t2 >> t3 >> end
