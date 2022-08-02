@@ -70,7 +70,7 @@ def get_datasets(ti, org):
        raise Exception("HTTP Error %d: from '%s'" % (response.status_code, url))
     return response.json()
 
-def create_job(ti,org, team, ace, name, command, workspace, dataset, instance, container):
+def create_job(ti, org, team, ace, name, command, workspace, dataset, instance, container):
     token = ti.xcom_pull(task_ids='token')
     '''Create a job in a given org and ace for the authenticated user - some shortcuts taken'''
     url = f'https://api.ngc.nvidia.com/v2/org/{org}/jobs'
@@ -89,10 +89,10 @@ def create_job(ti,org, team, ace, name, command, workspace, dataset, instance, c
         'runPolicy': {
             'preemptClass': 'RUNONCE'
         },
-        'workspaceMounts': [
-        ],
-        'datasetMounts': [
-        ]
+        #'workspaceMounts': [
+        #],
+        #'datasetMounts': [
+       # ]
     }
     response = requests.request("POST", url, headers=headers, data=json.dumps(data))
     if response.status_code != 200:
@@ -131,7 +131,7 @@ def run_job(ti):
     'Error' ("Missing instance argument")
  dataset_name=''
  try:
-     dataset_name = sys.argv[6]
+    dataset_name = sys.argv[6]
  except:
     'Error' ("Missing dataset name argument")
  workspace_name=''
@@ -196,7 +196,7 @@ with DAG(
     )
     t4 = PythonOperator(
             task_id = 'create_job',
-            op_kwargs={"org":'iffx7vlsrd5t',"ace":'nv-launchpad-bc-iad-ace',"name":'plzwork',"command":'ngc batch run --name "airflow" --preempt RUNONCE --min-timeslice 1s --total-runtime 0s --instance dgxa100.80g.1.norm --commandline "cd /results; wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.17.3.tar.xz; tar -xvf linux-5.17.3.tar.xz; rm -rf /results/*" --result /results --image "nvidia/pytorch:22.04-py3"', "team":'nvbc-tme',"instance":'.1.norm',"container": '', "dataset":'',"workspace":''},
+            op_kwargs={"org":'iffx7vlsrd5t',"ace":'nv-launchpad-bc-iad-ace',"name":'plzwork',"command":' "cd /results; wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.17.3.tar.xz; tar -xvf linux-5.17.3.tar.xz; rm -rf /results/*" --result /results --image "nvidia/pytorch:22.04-py3"', "team":'nvbc-tme',"instance":'.1.norm',"container": 'nvidia/pytorch:22.04-py3', "dataset":'',"workspace":''},
             python_callable=create_job,
             dag = dag
     )
