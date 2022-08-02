@@ -72,10 +72,7 @@ def get_datasets(ti, org, token):
     return response.json()
 
 def create_job(org, team, ace, name, command, workspace, workspace_mount, dataset, dataset_mount, instance, container, token):
-    org= str(org_v)
-    team =str(team_v)
-    ace= str(ace_v)
-
+        
     '''Create a job in a given org and ace for the authenticated user - some shortcuts taken'''
     url = f'https://api.ngc.nvidia.com/v2/org/{org}/jobs'
     headers = {
