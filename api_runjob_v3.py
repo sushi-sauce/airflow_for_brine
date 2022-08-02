@@ -196,7 +196,7 @@ with DAG(
     )
     t4 = PythonOperator(
             task_id = 'create_job',
-            op_kwargs={"org":'iffx7vlsrd5t',"ace":'nv-launchpad-bc-iad-ace',"name":'plzwork',"command":'ngc batch run --name "airflow" --preempt RUNONCE --min-timeslice 1s --total-runtime 0s --instance dgxa100.80g.1.norm --commandline "cd /results; wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.17.3.tar.xz; tar -xvf linux-5.17.3.tar.xz; rm -rf /results/*" --result /results --image "nvidia/pytorch:22.04-py3"', "team":'nvbc-tme',"instance":'.1.norm',"container": '', "dataset":''},
+            op_kwargs={"org":'iffx7vlsrd5t',"ace":'nv-launchpad-bc-iad-ace',"name":'plzwork',"command":'ngc batch run --name "airflow" --preempt RUNONCE --min-timeslice 1s --total-runtime 0s --instance dgxa100.80g.1.norm --commandline "cd /results; wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.17.3.tar.xz; tar -xvf linux-5.17.3.tar.xz; rm -rf /results/*" --result /results --image "nvidia/pytorch:22.04-py3"', "team":'nvbc-tme',"instance":'.1.norm',"container": '', "dataset":'',"workspace":''},
             python_callable=create_job,
             dag = dag
     )
